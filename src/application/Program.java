@@ -12,7 +12,7 @@ public class Program {
     public static void main(String[] args) {
         Locale.setDefault(Locale.US);
         SellerDao sellerDao = DaoFactory.createSellerDao();
-        List<Seller> sellers = sellerDao.findByDepartment(new Department(2, null));
+        List<Seller> sellers = sellerDao.findAll();
         sellers.forEach(System.out::println);
     }
 }

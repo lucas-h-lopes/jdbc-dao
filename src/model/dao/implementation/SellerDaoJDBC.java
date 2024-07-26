@@ -6,10 +6,7 @@ import model.dao.SellerDao;
 import model.entities.Department;
 import model.entities.Seller;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,7 +59,33 @@ public class SellerDaoJDBC implements SellerDao {
 
     @Override
     public List<Seller> findAll() {
-        return List.of();
+        String sql = "SELECT seller.*,department.Name as DepName FROM seller INNER JOIN department ON seller.DepartmentId = department.Id ORDER BY Name";
+        Statement statement = null;
+        ResultSet resultSet = null;
+        try {
+            statement = conn.createStatement();
+            resultSet = statement.executeQuery(sql);
+            List<Seller> sellers = new ArrayList<>();
+            Map<Integer, Department> map = new HashMap<>();
+            while (resultSet.next()) {
+                Department department = map.get(resultSet.getInt("DepartmentId"));
+                if (department == null) {
+                    department = instantiateDepartment(resultSet);
+                    map.put(resultSet.getInt("DepartmentId"), department);
+                }
+                sellers.add(instantiateSeller(resultSet, department));
+            }
+            if (sellers.isEmpty()) {
+                throw new DbException("Error: There is no sellers in the database");
+            }
+            return sellers;
+        } catch (SQLException e) {
+            throw new DbException("Error: " + e.getMessage());
+        } finally {
+            DB.closeStatement(statement);
+            DB.closeResultSet(resultSet);
+        }
+
     }
 
     @Override
