@@ -2,6 +2,7 @@ package application;
 
 import db.DbException;
 import model.dao.DaoFactory;
+import model.dao.DepartmentDao;
 import model.dao.SellerDao;
 import model.entities.Department;
 import model.entities.Seller;
@@ -15,8 +16,8 @@ import java.util.Scanner;
 
 public class Program {
     public static void main(String[] args) {
-        Locale.setDefault(Locale.US);
-        SellerDao sellerDao = DaoFactory.createSellerDao();
+
+
         ConsoleManager console = new ConsoleManager(new Scanner(System.in));
 
         console.print("Welcome to my " + TextColor.formatToBlue("CRUD") + " project using "+ TextColor.formatToGreen("JDBC") + "!");
