@@ -89,10 +89,7 @@ public class SellerDaoJDBC implements SellerDao {
             pStatement.setInt(1, id);
 
             Seller seller = findById(id);
-            if (seller == null) {
-                throw new DbException("Error: There is no Seller with id " + id);
-            }
-            System.out.println("Successfully deleted!\nSeller -> " + findById(id) + ".");
+            System.out.println("Successfully deleted!\nSeller -> " + seller + ".");
             pStatement.executeUpdate();
 
         } catch (SQLException e) {
