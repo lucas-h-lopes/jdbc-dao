@@ -5,6 +5,7 @@ import db.DbException;
 import model.dao.SellerDao;
 import model.entities.Department;
 import model.entities.Seller;
+import util.TextColor;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -38,7 +39,7 @@ public class SellerDaoJDBC implements SellerDao {
                 throw new DbException("Error: It was not possible to insert Seller -> " + seller + ".");
             } else {
                 seller.setId(id.getInt (1));
-                System.out.println("Successfully inserted!\nSeller -> " + findById(id.getInt(1)) + ".");
+                System.out.println(TextColor.formatToGreen("\nSuccessfully")+" inserted!\nSeller -> " + findById(id.getInt(1)) + ".");
             }
         } catch (SQLException e) {
             throw new DbException("Error: " + e.getMessage());
@@ -64,7 +65,7 @@ public class SellerDaoJDBC implements SellerDao {
             if(tempSeller == null){
                 throw new DbException("Error: There is no Seller with id " + seller.getId());
             }
-            System.out.println("Successfully updated.\nOld Seller -> "  + tempSeller);
+            System.out.println(TextColor.formatToGreen("\nSuccessfully")+" updated!\nOld Seller -> "  + tempSeller);
             int affected = pStatement.executeUpdate();
 
             if(affected == 0){
@@ -89,7 +90,7 @@ public class SellerDaoJDBC implements SellerDao {
             pStatement.setInt(1, id);
 
             Seller seller = findById(id);
-            System.out.println("Successfully deleted!\nSeller -> " + seller + ".");
+            System.out.println(TextColor.formatToGreen("\nSuccessfully")+" deleted!\nSeller -> " + seller + ".");
             pStatement.executeUpdate();
 
         } catch (SQLException e) {
@@ -123,7 +124,7 @@ public class SellerDaoJDBC implements SellerDao {
 
     @Override
     public List<Seller> findAll() {
-        String sql = "SELECT seller.*,department.Name as DepName FROM seller INNER JOIN department ON seller.DepartmentId = department.Id ORDER BY Name";
+        String sql = "SELECT seller.*,department.Name as DepName FROM seller INNER JOIN department ON seller.DepartmentId = department.Id ORDER BY Id";
         Statement statement = null;
         ResultSet resultSet = null;
         try {
@@ -158,7 +159,7 @@ public class SellerDaoJDBC implements SellerDao {
                 "FROM seller INNER JOIN department " +
                 "ON seller.DepartmentId = department.Id " +
                 "WHERE DepartmentId = ? " +
-                "ORDER BY Name";
+                "ORDER BY Id";
         ResultSet resultSet = null;
         PreparedStatement pStatement = null;
         try {
