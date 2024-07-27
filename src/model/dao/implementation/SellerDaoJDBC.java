@@ -7,7 +7,7 @@ import model.entities.Department;
 import model.entities.Seller;
 
 import java.sql.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,10 +35,10 @@ public class SellerDaoJDBC implements SellerDao {
             pStatement.executeUpdate();
             ResultSet id = pStatement.getGeneratedKeys();
             if (!id.next()) {
-                throw new DbException("Error: It was not possible to insert Seller [" + seller + "]");
-            }else{
-                seller.setId(id.getInt(1));
-                System.out.println("Insert was successful. Seller: [" + findById(id.getInt(1)) + "]");
+                throw new DbException("Error: It was not possible to insert Seller -> " + seller + ".");
+            } else {
+                seller.setId(id.getInt (1));
+                System.out.println("Successfully inserted!\nSeller -> " + findById(id.getInt(1)) + ".");
             }
         } catch (SQLException e) {
             throw new DbException("Error: " + e.getMessage());
@@ -49,12 +49,57 @@ public class SellerDaoJDBC implements SellerDao {
 
     @Override
     public void update(Seller seller) {
+        String sql = "update seller set Name = ?, Email = ?, BirthDate = ?, BaseSalary = ?, DepartmentId = ? where Id = ?";
+        PreparedStatement pStatement = null;
+        try {
+            pStatement = conn.prepareStatement(sql);
+            pStatement.setString(1, seller.getName());
+            pStatement.setString(2, seller.getEmail());
+            pStatement.setObject(3, seller.getBirthDate());
+            pStatement.setDouble(4, seller.getBaseSalary());
+            pStatement.setInt(5, seller.getDepartment().getId());
+            pStatement.setInt(6, seller.getId());
 
+            Seller tempSeller = findById(seller.getId());
+            if(tempSeller == null){
+                throw new DbException("Error: There is no Seller with id " + seller.getId());
+            }
+            System.out.println("Successfully updated.\nOld Seller -> "  + tempSeller);
+            int affected = pStatement.executeUpdate();
+
+            if(affected == 0){
+                throw new DbException("Error: It was not possible to update Seller -> " + seller);
+            }
+
+            System.out.println("Updated Seller -> " + findById(seller.getId()));
+
+        } catch (SQLException e) {
+            throw new DbException("Error: " + e.getMessage());
+        } finally {
+            DB.closeStatement(pStatement);
+        }
     }
 
     @Override
-    public void delete(Seller seller) {
+    public void deleteById(Integer id) {
+        String sql = "DELETE from seller where Id = ?";
+        PreparedStatement pStatement = null;
+        try {
+            pStatement = conn.prepareStatement(sql);
+            pStatement.setInt(1, id);
 
+            Seller seller = findById(id);
+            if (seller == null) {
+                throw new DbException("Error: There is no Seller with id " + id);
+            }
+            System.out.println("Successfully deleted!\nSeller -> " + findById(id) + ".");
+            pStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new DbException("Error: " + e.getMessage());
+        } finally {
+            DB.closeStatement(pStatement);
+        }
     }
 
     @Override
@@ -69,7 +114,7 @@ public class SellerDaoJDBC implements SellerDao {
             if (resultSet.next()) {
                 return instantiateSeller(resultSet, new Department(resultSet.getInt("DepartmentId"), resultSet.getString("DepName")));
             }
-            throw new DbException("Error: There is no Seller with Id = " + id);
+            throw new DbException("Error: There is no Seller with id " + id);
 
         } catch (SQLException e) {
             throw new DbException("Error: " + e.getMessage());
@@ -98,7 +143,7 @@ public class SellerDaoJDBC implements SellerDao {
                 sellers.add(instantiateSeller(resultSet, department));
             }
             if (sellers.isEmpty()) {
-                throw new DbException("Error: There is no sellers in the database");
+                throw new DbException("Error: There is no Seller in the database");
             }
             return sellers;
         } catch (SQLException e) {
@@ -146,7 +191,7 @@ public class SellerDaoJDBC implements SellerDao {
         return new Seller(resultSet.getInt("Id"),
                 resultSet.getString("Name"),
                 resultSet.getString("Email"),
-                resultSet.getObject("BirthDate", LocalDateTime.class),
+                resultSet.getObject("BirthDate", LocalDate.class),
                 resultSet.getDouble("BaseSalary"),
                 department);
     }
