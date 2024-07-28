@@ -1,17 +1,12 @@
 package application;
 
+import db.DB;
 import db.DbException;
-import model.dao.DaoFactory;
-import model.dao.DepartmentDao;
-import model.dao.SellerDao;
-import model.entities.Department;
-import model.entities.Seller;
 import model.exceptions.ConsoleManagerException;
 import util.ConsoleManager;
 import util.TextColor;
 
-import java.util.List;
-import java.util.Locale;
+import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 public class Program {
@@ -20,13 +15,18 @@ public class Program {
 
         ConsoleManager console = new ConsoleManager(new Scanner(System.in));
 
-        console.print("Welcome to my " + TextColor.formatToBlue("CRUD") + " project using "+ TextColor.formatToGreen("JDBC") + "!");
-        console.printEqualSymbol();
-        try {
-            console.getGeneralOperation();
-        }catch(DbException | ConsoleManagerException e){
-            System.out.println(e.getMessage());
-        }
+        console.print("Welcome to my " + TextColor.formatToBlue("CRUD") + " project using " + TextColor.formatToGreen("JDBC") + "!");
+        do {
 
+            try {
+                console.getGeneralOperation();
+            } catch (DbException | ConsoleManagerException e) {
+                System.out.println(e.getMessage());
+            } catch (DateTimeParseException e) {
+                System.out.println(TextColor.formatToRed("Error: Invalid date format, failed to parse. " + e.getMessage()));
+            }
+        } while (console.getAnswer() != '0');
+        DB.closeConnection();
+        console.closeScanner();
     }
 }

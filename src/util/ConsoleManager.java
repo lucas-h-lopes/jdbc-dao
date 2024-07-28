@@ -9,6 +9,7 @@ import model.exceptions.ConsoleManagerException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.InputMismatchException;
 import java.util.Locale;
 import java.util.Scanner;
 
@@ -16,6 +17,9 @@ public class ConsoleManager {
     private final Scanner scanner;
     private final SellerDao sellerDao;
     private final DepartmentDao departmentDao;
+    private final String errorMsg = "Error: Invalid operation.";
+    private char answer;
+    String specificAnswer;
 
     public ConsoleManager(Scanner scanner) {
         this.scanner = scanner;
@@ -29,82 +33,42 @@ public class ConsoleManager {
     }
 
     public void getGeneralOperation() throws ConsoleManagerException {
-        printGeneralOperations();
-        char answer = getStringUserInput("Operation: ").trim().charAt(0);
-        int specificAnswer;
-        switch (answer) {
+        do {
+            printGeneralOperations();
+            answer = getStringUserInput("Operation: ").trim().charAt(0);
 
-            case '1' -> {
-                getSpecificOperation(1);
-                specificAnswer = getIntUserInput("Operation: ");
-                if (specificAnswer == 1) {
-                    specificAnswer = getIntUserInput("Id: ");
-                    System.out.println(sellerDao.findById(specificAnswer));
-                } else if (specificAnswer == 2) {
-                    specificAnswer = getIntUserInput("Id: ");
-                    System.out.println(departmentDao.findById(specificAnswer));
-                } else {
-                    throw new ConsoleManagerException("Error: Invalid operation.");
-                }
-            }
-            case '2' -> {
-                getSpecificOperation(2);
-                specificAnswer = getIntUserInput("Operation: ");
-                if (specificAnswer == 1) {
-                    printEqualSymbol();
-                    print("Listing all Sellers\n");
-                    sellerDao.findAll().forEach(System.out::println);
-                } else if (specificAnswer == 2) {
-                    printEqualSymbol();
-                    print("Listing all Departments\n");
-                    departmentDao.findAll().forEach(System.out::println);
-                }
-            }
-            case '3' ->
-                    sellerDao.findByDepartment(departmentDao.findById(getIntUserInput("Department Id: "))).forEach(System.out::println);
-            case '4' -> {
-                getSpecificOperation(4);
-                specificAnswer = getIntUserInput("Operation: ");
-                if (specificAnswer == 1) {
-                    sellerDao.insert(createSeller());
-                } else if (specificAnswer == 2) {
-                    departmentDao.insert(createDepartment());
-                } else {
-                    throw new ConsoleManagerException("Error: Invalid operation.");
-                }
-            }
-            case '5' -> {
-                getSpecificOperation(5);
-                specificAnswer = getIntUserInput("Operation: ");
+            try {
+                switch (answer) {
+                    case '1' -> {
+                        getSpecificOperation(1);
+                        findByIdLogic();
+                    }
+                    case '2' -> {
+                        getSpecificOperation(2);
+                        findAllLogic();
+                    }
+                    case '3' -> findByDepartmentLogic();
 
-                if (specificAnswer == 1) {
-                    specificAnswer = getIntUserInput("Seller Id: ");
-                    Seller seller = sellerDao.findById(specificAnswer);
-                    updateSeller(seller);
-                    sellerDao.update(seller);
-                } else if (specificAnswer == 2) {
-                    specificAnswer = getIntUserInput("Department Id: ");
-                    Department department = departmentDao.findById(specificAnswer);
-                    updateDepartment(department);
-                    departmentDao.update(department);
-                } else {
-                    throw new ConsoleManagerException("Error: Invalid operation.");
+                    case '4' -> {
+                        getSpecificOperation(4);
+                        insertLogic();
+                    }
+                    case '5' -> {
+                        getSpecificOperation(5);
+                        updateLogic();
+                    }
+                    case '6' -> {
+                        getSpecificOperation(6);
+                        deleteLogic();
+                    }
+                    case '0' -> print(TextColor.formatToRed("Exiting...\n"));
+
+                    default -> throw new ConsoleManagerException(errorMsg);
                 }
+            } catch (NumberFormatException | InputMismatchException e) {
+                throw new ConsoleManagerException(errorMsg);
             }
-            case '6' -> {
-                getSpecificOperation(6);
-                specificAnswer = getIntUserInput("Operation: ");
-                if(specificAnswer == 1){
-                    specificAnswer = getIntUserInput("Seller Id: ");
-                    sellerDao.deleteById(specificAnswer);
-                }else if(specificAnswer == 2){
-                    specificAnswer = getIntUserInput("Department Id: ");
-                    departmentDao.delete(specificAnswer);
-                }else{
-                    throw new ConsoleManagerException("Error: Invalid operation");
-                }
-            }
-        }
+        } while (answer != '0');
     }
 
     private void getSpecificOperation(int i) throws ConsoleManagerException {
@@ -114,72 +78,89 @@ public class ConsoleManager {
             case 4 -> printInsert();
             case 5 -> printUpdate();
             case 6 -> printDeleteById();
-            default -> throw new ConsoleManagerException("Error: Invalid operation.");
+            default -> throw new ConsoleManagerException(errorMsg);
         }
     }
 
-    private Seller updateSeller(Seller seller) throws ConsoleManagerException {
+    private void printUpdateSeller() {
+        printEqualSymbol();
+        print("Fields available to update ");
+        print(TextColor.formatToYellow("(Your changes will be saved to the database when you exit this screen)\n"));
+        System.out.println(TextColor.formatToYellow("1.") + " Update Name");
+        System.out.println(TextColor.formatToYellow("2.") + " Update Email");
+        System.out.println(TextColor.formatToYellow("3.") + " Update BirthDate");
+        System.out.println(TextColor.formatToYellow("4.") + " Update BaseSalary");
+        System.out.println(TextColor.formatToYellow("5.") + " Update Department");
+        System.out.println(TextColor.formatToRed("0.") + " Exit");
+        print("Operation: ");
+    }
+
+    private void printUpdateDepartment() {
+        printEqualSymbol();
+        print("Fields available to update ");
+        print(TextColor.formatToYellow("(Your changes will be saved to the database when you exit this screen)\n"));
+        System.out.println(TextColor.formatToYellow("1.") + " Update Name");
+        System.out.println(TextColor.formatToRed("0.") + " Exit");
+        print("Operation: ");
+    }
+
+    private void updateSeller(Seller seller) throws ConsoleManagerException {
         char answer;
         do {
-            printEqualSymbol();
-            print("Fields available to update\n");
-            System.out.println(TextColor.formatToYellow("1.") + " Update Name");
-            System.out.println(TextColor.formatToYellow("2.") + " Update Email");
-            System.out.println(TextColor.formatToYellow("3.") + " Update BirthDate");
-            System.out.println(TextColor.formatToYellow("4.") + " Update BaseSalary");
-            System.out.println(TextColor.formatToYellow("5.") + " Update Department");
-            System.out.println(TextColor.formatToRed("0.") + " Exit");
-            print("Operation: ");
-            answer = scanner.nextLine().trim().charAt(0);
+            printUpdateSeller();
+            String strAnswer = scanner.nextLine().trim();
+            if (strAnswer.isBlank()) throw new ConsoleManagerException(errorMsg);
+            answer = strAnswer.charAt(0);
 
             switch (answer) {
                 case '1' -> {
-                    seller.setName(getStringUserInput("New name: "));
+                    String sellerName = getStringUserInput("New name: ");
+                    seller.setName(sellerName);
                     print("Name updated " + TextColor.formatToGreen("successfully!\n"));
                 }
                 case '2' -> {
-                    seller.setEmail(getStringUserInput("New email: "));
+                    String sellerEmail = getStringUserInput("New email: ");
+                    seller.setEmail(sellerEmail);
                     print("Email updated " + TextColor.formatToGreen("successfully!\n"));
                 }
                 case '3' -> {
-                    seller.setBirthDate(LocalDate.parse(getStringUserInput("New birthdate (dd/MM/yyyy): "), DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    String sellerBirthDate = getStringUserInput("New birthdate (dd/MM/yyyy): ");
+                    seller.setBirthDate(sellerBirthDate);
                     print("Birthdate updated " + TextColor.formatToGreen("successfully!\n"));
                 }
                 case '4' -> {
-                    seller.setBaseSalary(getDoubleUserInput("New base salary: "));
+                    String sellerSalary = getStringUserInput("New base salary: ");
+                    seller.setBaseSalary(Double.parseDouble(sellerSalary));
                     print("Base salary updated " + TextColor.formatToGreen("successfully!\n"));
                 }
                 case '5' -> {
-                    seller.setDepartment(departmentDao.findById(getIntUserInput("New Department Id: ")));
+                    seller.setDepartment(departmentDao.findById(Integer.parseInt(getStringUserInput("New Department Id: "))));
                     print("Department updated " + TextColor.formatToGreen("successfully!\n"));
                 }
                 case '0' -> print(TextColor.formatToRed("Exiting...\n"));
-                default -> throw new ConsoleManagerException("Error: Invalid operation.");
+                default -> throw new ConsoleManagerException(errorMsg);
             }
         } while (answer != '0');
-        return seller;
     }
 
-    private Department updateDepartment(Department department) throws ConsoleManagerException{
+    private void updateDepartment(Department department) throws ConsoleManagerException {
         char answer;
         do {
-            printEqualSymbol();
-            print("Fields available to update\n");
-            System.out.println(TextColor.formatToYellow("1.") + " Update Name");
-            System.out.println(TextColor.formatToRed("0.") + " Exit");
-            print("Operation: ");
-            answer = scanner.nextLine().trim().charAt(0);
+            printUpdateDepartment();
+            String strAnswer = scanner.nextLine().trim();
+            if (strAnswer.isBlank()) throw new ConsoleManagerException(errorMsg);
+            answer = strAnswer.charAt(0);
 
             switch (answer) {
                 case '1' -> {
-                    department.setName(getStringUserInput("New name: "));
+                    String depName = getStringUserInput("New name: ");
+                    department.setName(depName);
                     print("Name updated " + TextColor.formatToGreen("successfully!\n"));
                 }
                 case '0' -> print(TextColor.formatToRed("Exiting...\n"));
-                default -> throw new ConsoleManagerException("Error: Invalid operation.");
+                default -> throw new ConsoleManagerException(errorMsg);
             }
         } while (answer != '0');
-        return department;
     }
 
     public String getStringUserInput(String prompt) {
@@ -187,41 +168,120 @@ public class ConsoleManager {
         return scanner.nextLine();
     }
 
-    public int getIntUserInput(String prompt) {
-        print(prompt);
-        int answer = scanner.nextInt();
-        scanner.nextLine();
-        return answer;
-    }
-
-    public Seller createSeller() {
+    private Seller createSeller() throws ConsoleManagerException {
         String name = getStringUserInput("Seller name: ");
         String email = getStringUserInput("Email: ");
         String textDate = getStringUserInput("Birth date (dd/MM/yyyy): ");
-        double baseSalary = getDoubleUserInput("Base salary: ");
-        return new Seller(null, name, email, LocalDate.parse(textDate, DateTimeFormatter.ofPattern("dd/MM/yyyy")), baseSalary, departmentDao.findById(getIntUserInput("Department Id: ")));
+        LocalDate parsedDate = LocalDate.parse(textDate, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        String baseSalary = getStringUserInput("Base salary: ");
+
+        return new Seller(null, name, email, parsedDate, Double.parseDouble(baseSalary), departmentDao.findById(Integer.parseInt(getStringUserInput("Department Id: "))));
     }
 
-    public Department createDepartment() {
-        return new Department(null, getStringUserInput("Department name: "));
-    }
-
-    public double getDoubleUserInput(String prompt) {
-        print(prompt);
-        double answer = scanner.nextDouble();
-        scanner.nextLine();
-        return answer;
+    public Department createDepartment() throws ConsoleManagerException {
+        String depName = getStringUserInput("Department name: ");
+        return new Department(null, depName);
     }
 
     public void closeScanner() {
         scanner.close();
     }
 
+    public char getAnswer() {
+        return answer;
+    }
+
+    private void findByIdLogic() {
+        specificAnswer = getStringUserInput("Operation: ").trim();
+        if (specificAnswer.equals("1")) {
+            specificAnswer = getStringUserInput("Id: ");
+            Seller seller = sellerDao.findById(Integer.parseInt(specificAnswer));
+            System.out.println(TextColor.formatToBlue("\nSeller found: ") + seller);
+        } else if (specificAnswer.equals("2")) {
+            specificAnswer = getStringUserInput("Id: ");
+            Department department = departmentDao.findById(Integer.parseInt(specificAnswer));
+            System.out.println(TextColor.formatToBlue("\nDepartment found: ") + department);
+        } else {
+            throw new ConsoleManagerException(errorMsg);
+        }
+    }
+
+    private void deleteLogic() {
+        specificAnswer = getStringUserInput("Operation: ");
+        if (specificAnswer.equals("1")) {
+            specificAnswer = getStringUserInput("Seller Id: ");
+            sellerDao.deleteById(Integer.parseInt(specificAnswer));
+        } else if (specificAnswer.equals("2")) {
+            specificAnswer = getStringUserInput("Department Id: ");
+            departmentDao.delete(Integer.parseInt(specificAnswer));
+        } else {
+            throw new ConsoleManagerException(errorMsg);
+        }
+    }
+
+    private void updateLogic() {
+        specificAnswer = getStringUserInput("Operation: ");
+
+        if (specificAnswer.equals("1")) {
+            specificAnswer = getStringUserInput("Seller Id: ");
+            Seller seller = sellerDao.findById(Integer.parseInt(specificAnswer));
+            updateSeller(seller);
+            if (sellerDao.findById(Integer.parseInt(specificAnswer)).equals(seller)) {
+                System.out.println(TextColor.formatToYellow("At least one field must be modified to perform the update."));
+            } else {
+                sellerDao.update(seller);
+            }
+        } else if (specificAnswer.equals("2")) {
+            specificAnswer = getStringUserInput("Department Id: ");
+            Department department = departmentDao.findById(Integer.parseInt(specificAnswer));
+            updateDepartment(department);
+            if (department.equals(departmentDao.findById(Integer.parseInt(specificAnswer)))) {
+                System.out.println(TextColor.formatToYellow("At least one field must be modified to perform the update."));
+            } else {
+                departmentDao.update(department);
+            }
+        } else {
+            throw new ConsoleManagerException(errorMsg);
+        }
+    }
+
+    private void insertLogic() {
+        specificAnswer = getStringUserInput("Operation: ");
+        if (specificAnswer.equals("1")) {
+            sellerDao.insert(createSeller());
+        } else if (specificAnswer.equals("2")) {
+            departmentDao.insert(createDepartment());
+        } else {
+            throw new ConsoleManagerException(errorMsg);
+        }
+    }
+
+    private void findByDepartmentLogic() {
+        Department department = departmentDao.findById(Integer.parseInt(getStringUserInput("Department Id: ")));
+        System.out.println("\nAll Sellers in the " + TextColor.formatToBlue(department.getName()) + " department");
+        sellerDao.findByDepartment(department).forEach(System.out::println);
+    }
+
+    private void findAllLogic() {
+        specificAnswer = getStringUserInput("Operation: ");
+        if (specificAnswer.equals("1")) {
+            printEqualSymbol();
+            print("Listing all Sellers\n");
+            sellerDao.findAll().forEach(System.out::println);
+        } else if (specificAnswer.equals("2")) {
+            printEqualSymbol();
+            print("Listing all Departments\n");
+            departmentDao.findAll().forEach(System.out::println);
+        } else {
+            throw new ConsoleManagerException(errorMsg);
+        }
+    }
     public void printEqualSymbol() {
         System.out.println("\n================");
     }
 
     private void printGeneralOperations() {
+        printEqualSymbol();
         System.out.println("Operations");
         System.out.println(TextColor.formatToYellow("1.") + " Find by Id");
         System.out.println(TextColor.formatToYellow("2.") + " Find all");
@@ -266,5 +326,4 @@ public class ConsoleManager {
         System.out.println(TextColor.formatToYellow("1.") + " Delete Seller by Id");
         System.out.println(TextColor.formatToYellow("2.") + " Delete Department by Id");
     }
-
 }
