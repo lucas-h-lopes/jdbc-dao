@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 public class SellerDaoJDBC implements SellerDao {
-    private Connection conn;
+    private final Connection conn;
 
     public SellerDaoJDBC(Connection conn) {
         this.conn = conn;
@@ -36,10 +36,10 @@ public class SellerDaoJDBC implements SellerDao {
             pStatement.executeUpdate();
             ResultSet id = pStatement.getGeneratedKeys();
             if (!id.next()) {
-                throw new DbException("Error: It was not possible to insert Seller -> " + seller + ".");
+                throw new DbException("Error: It was not possible to insert Seller: " + seller);
             } else {
-                seller.setId(id.getInt (1));
-                System.out.println(TextColor.formatToGreen("\nSuccessfully")+" inserted!\nSeller -> " + findById(id.getInt(1)) + ".");
+                seller.setId(id.getInt(1));
+                System.out.println(TextColor.formatToGreen("\nSuccessfully") + " inserted!"+TextColor.formatToBlue("\nSeller: ") + findById(id.getInt(1)) + ".");
             }
         } catch (SQLException e) {
             throw new DbException("Error: " + e.getMessage());
@@ -62,17 +62,19 @@ public class SellerDaoJDBC implements SellerDao {
             pStatement.setInt(6, seller.getId());
 
             Seller tempSeller = findById(seller.getId());
-            if(tempSeller == null){
+            if (tempSeller == null) {
                 throw new DbException("Error: There is no Seller with id " + seller.getId());
             }
-            System.out.println(TextColor.formatToGreen("\nSuccessfully")+" updated!\nOld Seller -> "  + tempSeller);
-            int affected = pStatement.executeUpdate();
+            int affected;
 
-            if(affected == 0){
-                throw new DbException("Error: It was not possible to update Seller -> " + seller);
-            }
+                System.out.println(TextColor.formatToGreen("\nSuccessfully") + " updated!"+TextColor.formatToYellow("\nOld Seller: ") + tempSeller);
+                affected = pStatement.executeUpdate();
 
-            System.out.println("Updated Seller -> " + findById(seller.getId()));
+                if (affected == 0) {
+                    throw new DbException("Error: It was not possible to update Seller: " + seller);
+                }
+
+                System.out.println(TextColor.formatToBlue("Updated Seller: ")+ findById(seller.getId()));
 
         } catch (SQLException e) {
             throw new DbException("Error: " + e.getMessage());
@@ -90,7 +92,7 @@ public class SellerDaoJDBC implements SellerDao {
             pStatement.setInt(1, id);
 
             Seller seller = findById(id);
-            System.out.println(TextColor.formatToGreen("\nSuccessfully")+" deleted!\nSeller -> " + seller + ".");
+            System.out.println(TextColor.formatToGreen("\nSuccessfully") + " deleted!"+TextColor.formatToBlue("\nSeller: ") + seller + ".");
             pStatement.executeUpdate();
 
         } catch (SQLException e) {

@@ -4,7 +4,6 @@ import db.DB;
 import db.DbException;
 import model.dao.DepartmentDao;
 import model.entities.Department;
-import model.entities.Seller;
 import util.TextColor;
 
 import java.sql.*;
@@ -12,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DepartmentDaoJDBC implements DepartmentDao {
-    private Connection connection;
+    private final Connection connection;
 
     public DepartmentDaoJDBC(Connection connection) {
         this.connection = connection;
@@ -30,10 +29,10 @@ public class DepartmentDaoJDBC implements DepartmentDao {
             id = pStatement.getGeneratedKeys();
 
             if (id.next()) {
-                System.out.println("\nSuccessfully inserted!\nDepartment -> " + findById(id.getInt(1)) + ".");
+                System.out.println(TextColor.formatToGreen("\nSuccessfully") + " inserted!" + TextColor.formatToBlue("\nDepartment: ") + findById(id.getInt(1)) + ".");
                 department.setId(id.getInt(1));
             } else {
-                throw new DbException("Error: It was not possible to insert Department -> " + department + ".");
+                throw new DbException("Error: It was not possible to insert Department -> " + department);
             }
 
         } catch (SQLException e) {
@@ -48,7 +47,7 @@ public class DepartmentDaoJDBC implements DepartmentDao {
     public Department findById(int id) {
         String sql = "select * from department where Id = ?";
         PreparedStatement pStatement = null;
-        ResultSet resultSet = null;
+        ResultSet resultSet;
         try {
             pStatement = connection.prepareStatement(sql);
             pStatement.setInt(1, id);
@@ -94,25 +93,25 @@ public class DepartmentDaoJDBC implements DepartmentDao {
     public void update(Department department) {
         String sql = "update department set Name = ? where Id = ?";
         PreparedStatement preparedStatement = null;
-        try{
+        try {
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setString(1, department.getName());
             preparedStatement.setInt(2, department.getId());
 
             Department oldDepartment = findById(department.getId());
 
-            System.out.println(TextColor.formatToGreen("\nSuccessfully")+" updated!\nOld Seller -> "  + oldDepartment);
+            System.out.println(TextColor.formatToGreen("\nSuccessfully") + " updated!\n" + TextColor.formatToYellow("Old Department: ") + oldDepartment);
             int affected = preparedStatement.executeUpdate();
 
-            if(affected == 0){
+            if (affected == 0) {
                 throw new DbException("Error: It was not possible to update Department -> " + oldDepartment);
             }
 
-            System.out.println("Updated Department -> " + findById(department.getId()));
+            System.out.println(TextColor.formatToBlue("Updated Department: ") + findById(department.getId()));
 
-        }catch(SQLException e){
+        } catch (SQLException e) {
             throw new DbException("Error: " + e.getMessage());
-        }finally{
+        } finally {
             DB.closeStatement(preparedStatement);
         }
     }
@@ -126,7 +125,7 @@ public class DepartmentDaoJDBC implements DepartmentDao {
             pStatement.setInt(1, id);
 
             Department department = findById(id);
-            System.out.println(TextColor.formatToGreen("\nSuccessfully")+" deleted!\nDepartment -> " + department + ".");
+            System.out.println(TextColor.formatToGreen("\nSuccessfully") + " deleted!\n" + TextColor.formatToBlue("Department: ") + department + ".");
             pStatement.executeUpdate();
 
 
