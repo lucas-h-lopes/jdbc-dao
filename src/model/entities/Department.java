@@ -1,5 +1,5 @@
 package model.entities;
-
+import model.exceptions.ConsoleManagerException;
 import java.util.Objects;
 
 public class Department {
@@ -7,6 +7,7 @@ public class Department {
     private String name;
 
     public Department(Integer id, String name){
+        if(name.isBlank()) throw new ConsoleManagerException("Error: Department name is required.");
         this.id = id;
         this.name = name;
     }
@@ -23,7 +24,8 @@ public class Department {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(String name) throws ConsoleManagerException{
+        if (name.isBlank()) throw new ConsoleManagerException("Error: Department's name is required.");
         this.name = name;
     }
 
@@ -32,12 +34,12 @@ public class Department {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Department that = (Department) o;
-        return Objects.equals(id, that.id);
+        return Objects.equals(id, that.id) && Objects.equals(name, that.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hash(id, name);
     }
 
     @Override
