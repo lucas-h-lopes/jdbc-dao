@@ -26,8 +26,6 @@ Para rodar o programa localmente, execute os seguintes passos:
 
     - dburl=jdbc:mysql://localhost:{SUA_PORTA_AQUI}/{NOME_DATABASE_AQUI}?allowPublicKeyRetrieval=true&useSSL=false``
 
-    - useSSL=false
-
 
 4. No seu banco de dados MySQL, importe as tabelas através do arquivo: [database.sql](https://drive.google.com/file/d/1ozKRCVRkR2fZa7BPp6Fp-Lj6RwYGLcZX/view).
 
